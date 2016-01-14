@@ -1,6 +1,8 @@
 let g:committia#git#cmd = get(g:, 'committia#git#cmd', 'git')
 let g:committia#git#diff_cmd = get(g:, 'committia#git#diff_cmd', 'diff -u --cached --no-color')
 let g:committia#git#status_cmd = get(g:, 'committia#git#status_cmd', 'status -b')
+let g:committia#git#log_cmd = get(g:, 'committia#git#log_cmd', 'log --oneline')
+let g:committia#git#log_cnt = get(g:, 'committia#git#log_cnt', 20)
 
 if ! executable(g:committia#git#cmd)
     echoerr g:committia#git#cmd . " command is not found"
@@ -25,7 +27,25 @@ function! s:search_git_dir() abort
 endfunction
 
 function! s:execute_git(cmd, git_dir) abort
-    return system(printf('%s --git-dir="%s" --work-tree="%s" %s', g:committia#git#cmd, a:git_dir, fnamemodify(a:git_dir, ':h'), a:cmd))
+    let diff_temp = join([
+    \   '*** Example *****',
+    \   '* Fix typo in docs',
+    \   '* Remove unused code',
+    \   '* Remove use of deprecated method',
+    \   '* Update Modernizr to v1.6',
+    \   '* Make it possible to have IDs per request',
+    \   '* Make sure to reset default_url_options',
+    \   '* Don''t use "assert_not_nil"',
+    \   '* Allow the user to drag faster',
+    \   '* Remove methods to avoid warnings'
+    \],"\n")
+    let logs = split(system(printf(
+    \   '%s %s -n %d',
+    \   g:committia#git#cmd,
+    \   g:committia#git#log_cmd,
+    \   g:committia#git#log_cnt)), "\n")
+    let log_temps = ["*** Commit Histories *****"] + logs
+    return diff_temp . "\n\n" . join(log_temps, "\n* ") . "\n\n" . system(printf('%s --git-dir="%s" --work-tree="%s" %s', g:committia#git#cmd, a:git_dir, fnamemodify(a:git_dir, ':h'), a:cmd))
 endfunction
 
 function! committia#git#diff(...) abort
